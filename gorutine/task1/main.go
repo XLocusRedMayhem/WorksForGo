@@ -2,34 +2,49 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"sync"
 )
 
 func main() {
-	var wg sync.WaitGroup
-	var num string
-	fmt.Print("\n", "Напишите число: ")
-	fmt.Scan(&num)
-	wg.Add(2)
-	go SumNum(num[:len(num)/2], &wg, 1)
-	go SumNum(num[len(num)/2:], &wg, 2)
-	wg.Wait()
-	fmt.Print("\n")
-}
-
-func SumNum(num string, wg *sync.WaitGroup, number int) {
-	defer wg.Done()
-	var sum int
-	fmt.Print(number, " срез: ", num, "\n")
-	for i := 0; i < len(num); i++ {
-		conNum, err := strconv.Atoi(num)
-		fmt.Print(number, " ", conNum, "\n")
-		if err != nil {
-			fmt.Print("Ошибка", "\n")
-		}
-		sum += conNum
+	var lengthOfArray int
+	fmt.Print("\n", "Укажите размер массива натуральных чисел: ")
+	fmt.Scan(&lengthOfArray)
+	numbers := make([]int, lengthOfArray)
+	fmt.Print("Введите числа через пробел: ")
+	for i, number := range numbers {
+		fmt.Scan(&number)
+		numbers[i] = number
 	}
-
-	fmt.Print("сумма ", number, " среза: ", sum, "\n")
+	fmt.Print("Числа массива: ")
+	for _, number := range numbers {
+		fmt.Print(number, " ")
+	}
+	fmt.Print("\n")
+	var wg sync.WaitGroup
+	results := make(chan int)
+	wg.Add(1)
+	go Sum(&wg, numbers[:len(numbers)/2], results)
+	wg.Add(1)
+	go Sum(&wg, numbers[len(numbers)/2:], results)
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+	result := 0
+	for slices := range results {
+		result += slices
+	}
+	fmt.Print("Сумма двух сум срезов: ", result)
+	fmt.Print("\n\n")
+}
+func Sum(wg *sync.WaitGroup, numbers []int, results chan<- int) {
+	defer wg.Done()
+	sum := 0
+	fmt.Print("Срез массива чисел: ")
+	for _, number := range numbers {
+		fmt.Print(number, " ")
+		sum += number
+	}
+	fmt.Print("\n")
+	results <- sum
 }
