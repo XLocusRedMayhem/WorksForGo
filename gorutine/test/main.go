@@ -2,45 +2,35 @@ package main
 
 import (
 	"fmt"
-	"sync"
+	"math/rand/v2"
 )
 
 func main() {
-	var lengthOfArray int
-	fmt.Print("\n", "Укажите размер массива натуральных чисел: ")
-	fmt.Scan(&lengthOfArray)
-	numbers := make([]int, lengthOfArray)
-	fmt.Print("Введите числа через пробел: ")
-	for i, number := range numbers {
-		fmt.Scan(&number)
-		numbers[i] = number
-	}
-	fmt.Print("Числа массива: ")
-	for _, number := range numbers {
-		fmt.Print(number, " ")
-	}
-	var wg sync.WaitGroup
-	results := make(chan int)
-	wg.Add(2)
-	go func(numbers []int) {
-		defer wg.Done()
-		results <- Sum(numbers[:len(numbers)/2])
-	}(numbers)
-	go func(numbers []int) {
-		defer wg.Done()
-		results <- Sum(numbers[len(numbers)/2:])
-	}(numbers)
 
+	lengthOfArray := 0
+	sizeOfNumber := 0
+	fmt.Print("\nВведите размер числового массива: ")
+	fmt.Scan(&lengthOfArray)
+	fmt.Print("Введите размер генерируемых чисел: ")
+	fmt.Scan(&sizeOfNumber)
+	generated := make(chan int)
+	squares := make(chan int)
+	go func(generated chan int) {
+		for range lengthOfArray {
+			generated <- rand.IntN(sizeOfNumber)
+		}
+	}()
 	go func() {
-		wg.Wait()
-		close(results)
+		number := <-generated
+		squares <- number * number
 	}()
 
-	wg.Wait()
-	close(results)
+	var numbers []int
+	for number := range squares {
+		numbers = append(numbers, number)
+		fmt.Println(number)
+	}
+	close(generated)
+	close(squares)
 	fmt.Print("\n\n")
-}
-
-func Sum(numbers []int) int {
-	return 10
 }

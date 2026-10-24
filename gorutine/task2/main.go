@@ -3,33 +3,53 @@ package main
 import (
 	"fmt"
 	"math/rand/v2"
-	"sync"
 )
 
 func main() {
-	var wg sync.WaitGroup
 	lengthOfArray := 0
 	sizeOfNumber := 0
 	fmt.Print("\nВведите размер числового массива: ")
 	fmt.Scan(&lengthOfArray)
 	fmt.Print("Введите размер генерируемых чисел: ")
 	fmt.Scan(&sizeOfNumber)
+	randomNumbers := make(chan int)
+	squaringNumbers := make(chan int)
 
-	wg.Add(1)
-	go GenerataArrayNumbers(&wg, lengthOfArray, sizeOfNumber)
-	wg.Wait()
+	go func(randomNumbers chan int) {
+		defer close(randomNumbers)
+		for i := 0; i < lengthOfArray; i++ {
+			randomNumbers <- rand.IntN(sizeOfNumber)
+		}
+	}(randomNumbers)
 
+	go func(squaringNumbers chan int) {
+		defer close(squaringNumbers)
+		for randNumber := range randomNumbers {
+			squaringNumbers <- randNumber * randNumber
+		}
+	}(squaringNumbers)
+
+	/*fmt.Print("Числа массива: ")
+	for ranNum := range randomNumbers {
+		fmt.Print(ranNum, " ")
+	}
+	fmt.Print("\nКвадраты массива: ")
+	for squarNum := range squaringNumbers {
+		fmt.Print(squarNum, " ", 1)
+	}*/
 	fmt.Print("\n\n")
 }
 
-func GenerataArrayNumbers(wg *sync.WaitGroup, lengthOfArray int, sizeOfNumber int) {
-	defer wg.Done()
-	numbers := make([]int, lengthOfArray)
-	for i := range lengthOfArray {
-		numbers[i] = rand.IntN(sizeOfNumber)
+func GenerateArrayNumbers(randomNumbers chan int, lengthOfArray int, sizeOfNumber int) {
+	defer close(randomNumbers)
+	for i := 0; i < lengthOfArray; i++ {
+		randomNumbers <- rand.IntN(sizeOfNumber)
 	}
-	fmt.Print("Числа массива: ")
-	for _, number := range numbers {
-		fmt.Print(number, " ")
+}
+
+func SquaringNumbers(randomNumbers <-chan int, squaringNumbers chan int) {
+	for randNumber := range randomNumbers {
+		squaringNumbers <- randNumber * randNumber
 	}
+	close(squaringNumbers)
 }
