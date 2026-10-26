@@ -3,34 +3,47 @@ package main
 import (
 	"fmt"
 	"math/rand/v2"
+	"sync"
 )
 
 func main() {
 
-	lengthOfArray := 0
-	sizeOfNumber := 0
-	fmt.Print("\nВведите размер числового массива: ")
+	lengthOfArray := 6
+	sizeOfNumber := 100
+	/*fmt.Print("\nВведите размер числового массива: ")
 	fmt.Scan(&lengthOfArray)
 	fmt.Print("Введите размер генерируемых чисел: ")
-	fmt.Scan(&sizeOfNumber)
+	fmt.Scan(&sizeOfNumber)*/
 	generated := make(chan int)
 	squares := make(chan int)
-	go func(generated chan int) {
-		for range lengthOfArray {
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer close(generated)
+		for i := 0; i < lengthOfArray; i++ {
 			generated <- rand.IntN(sizeOfNumber)
 		}
 	}()
+
+	wg.Add(1)
 	go func() {
-		number := <-generated
-		squares <- number * number
+		defer wg.Done()
+		defer close(squares)
+		for i := range generated {
+			squares <- i * i
+		}
 	}()
 
-	var numbers []int
-	for number := range squares {
-		numbers = append(numbers, number)
-		fmt.Println(number)
+	for result := range squares {
+
 	}
-	close(generated)
-	close(squares)
+
+	go func() {
+		wg.Wait()
+	}()
+	var a string
+	fmt.Scan(&a)
 	fmt.Print("\n\n")
 }
