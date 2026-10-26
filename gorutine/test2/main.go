@@ -1,12 +1,12 @@
 package main
 
-import "fmt"
-
-func main() {
-	resultCh := make(chan int)
+func main() { // не работает
+	var numbers []int = []int{53, 23, 34, 26, 45, 34}
+	resultsСhannel := make(chan int)
 	go func() {
-		resultCh <- 42
+		defer close(resultsСhannel)
+		for _, number := range numbers {
+			resultsСhannel <- number
+		}
 	}()
-	result := <-resultCh
-	fmt.Println(result)
 }

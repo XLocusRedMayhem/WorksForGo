@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-func main() {
+func main() { // работает
 	var lengthOfArray int
 	fmt.Print("\n", "Укажите размер массива натуральных чисел: ")
 	fmt.Scan(&lengthOfArray)

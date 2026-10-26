@@ -6,14 +6,13 @@ import (
 	"sync"
 )
 
-func main() {
-
-	lengthOfArray := 6
-	sizeOfNumber := 100
-	/*fmt.Print("\nВведите размер числового массива: ")
+func main() { // работает
+	lengthOfArray := 1
+	sizeOfNumber := 1
+	fmt.Print("\nВведите размер числового массива: ")
 	fmt.Scan(&lengthOfArray)
 	fmt.Print("Введите размер генерируемых чисел: ")
-	fmt.Scan(&sizeOfNumber)*/
+	fmt.Scan(&sizeOfNumber)
 	generated := make(chan int)
 	squares := make(chan int)
 
@@ -36,14 +35,19 @@ func main() {
 		}
 	}()
 
+	var results []int
 	for result := range squares {
-
+		results = append(results, result)
 	}
 
 	go func() {
 		wg.Wait()
 	}()
-	var a string
-	fmt.Scan(&a)
+
+	fmt.Print("Результат: ")
+	for _, result := range results {
+		fmt.Print(result, " ")
+	}
+
 	fmt.Print("\n\n")
 }
