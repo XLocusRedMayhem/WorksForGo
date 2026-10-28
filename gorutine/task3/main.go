@@ -14,7 +14,7 @@ type Result struct {
 	Number int
 }
 
-func main() { // не работает
+func main() {
 	var numbers []int = []int{53, 23, 34, 26, 45, 34, 32, 43, 65, 17, 43, 92, 47, 18}
 	fmt.Print("Срез чисел: ")
 	for _, number := range numbers {

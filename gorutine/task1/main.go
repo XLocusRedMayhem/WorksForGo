@@ -5,46 +5,53 @@ import (
 	"sync"
 )
 
-func main() { // работает
-	var lengthOfArray int
-	fmt.Print("\n", "Укажите размер массива натуральных чисел: ")
-	fmt.Scan(&lengthOfArray)
-	numbers := make([]int, lengthOfArray)
-	fmt.Print("Введите числа через пробел: ")
-	for i, number := range numbers {
-		fmt.Scan(&number)
-		numbers[i] = number
-	}
-	fmt.Print("Числа массива: ")
-	for _, number := range numbers {
+func MyPrintSlice(name string, slice []int) {
+	fmt.Print(name)
+	for i, number := range slice {
+		if len(slice)/2 == i {
+			fmt.Print("| ")
+		}
 		fmt.Print(number, " ")
 	}
-	fmt.Print("\n")
+	fmt.Println()
+}
+
+func MyPrintResultCh(ch <-chan int) {
+
+	for i := 0; true; i++ {
+		value, ok := <-ch
+		if !ok {
+			return
+		}
+		fmt.Print("Сумма половины среза ", i+1, ": ")
+		fmt.Println(value)
+	}
+}
+
+func Sum(slice []int) int {
+	result := 0
+	for _, number := range slice {
+		result += number
+	}
+	return result
+}
+
+func AmountHalfSlice(wg *sync.WaitGroup, ch chan<- int, slice []int) {
+	defer wg.Done()
+	ch <- Sum(slice)
+}
+
+func main() {
 	var wg sync.WaitGroup
-	results := make(chan int)
-	wg.Add(1)
-	go Sum(&wg, numbers[:len(numbers)/2], results)
-	wg.Add(1)
-	go Sum(&wg, numbers[len(numbers)/2:], results)
+	var slice []int = []int{2, 6, 7, 3, 6, 8}
+	MyPrintSlice("Числа среза: ", slice)
+	ch := make(chan int)
+	wg.Add(2)
+	go AmountHalfSlice(&wg, ch, slice[:len(slice)/2])
+	go AmountHalfSlice(&wg, ch, slice[len(slice)/2:])
 	go func() {
 		wg.Wait()
-		close(results)
+		close(ch)
 	}()
-	result := 0
-	for slices := range results {
-		result += slices
-	}
-	fmt.Print("Сумма двух сум срезов: ", result)
-	fmt.Print("\n\n")
-}
-func Sum(wg *sync.WaitGroup, numbers []int, results chan<- int) {
-	defer wg.Done()
-	sum := 0
-	fmt.Print("Срез массива чисел: ")
-	for _, number := range numbers {
-		fmt.Print(number, " ")
-		sum += number
-	}
-	fmt.Print("\n")
-	results <- sum
+	MyPrintResultCh(ch)
 }

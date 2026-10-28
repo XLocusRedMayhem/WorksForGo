@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-func main() { // работает
+func main() {
 	lengthOfArray := 1
 	sizeOfNumber := 1
 	fmt.Print("\nВведите размер числового массива: ")
