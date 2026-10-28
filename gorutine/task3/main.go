@@ -15,7 +15,12 @@ type Result struct {
 }
 
 func main() { // не работает
-	var numbers []int = []int{53, 23, 34, 26, 45, 34}
+	var numbers []int = []int{53, 23, 34, 26, 45, 34, 32, 43, 65, 17, 43, 92, 47, 18}
+	fmt.Print("Срез чисел: ")
+	for _, number := range numbers {
+		fmt.Print(number, " ")
+	}
+	fmt.Println()
 
 	var wg sync.WaitGroup
 	tasksСhannel := make(chan Task)
@@ -38,10 +43,11 @@ func main() { // не работает
 		close(resultsChannel)
 	}()
 
+	fmt.Print("Резултат: ")
 	for result := range resultsChannel {
-		fmt.Print("Резултат: ")
 		fmt.Print(result.Number, " ")
 	}
+	fmt.Println()
 
 }
 
