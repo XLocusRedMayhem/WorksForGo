@@ -7,65 +7,80 @@ import (
 	"time"
 )
 
-func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	var numbers []int
-	for i := range 15 {
-		numbers = append(numbers, i)
+func SliceGenerator() []int {
+	numbers := []int{}
+	for i := 0; i < 30; i++ {
+		if i == 15 {
+			numbers = append(numbers, 77)
+		} else {
+			numbers = append(numbers, i+1)
+		}
 	}
-	numbers = append(numbers, 536)
-	for i := range 15 {
-		numbers = append(numbers, i+16)
-	}
+	PrintSlice("Числа среза: ", numbers)
+	return numbers
+}
 
-	fmt.Print("Числа среза: ")
-	for i := 0; i < len(numbers); i++ {
+func PrintSlice(text string, numbers []int) {
+	fmt.Print(text)
+	for i := range numbers {
 		fmt.Print(numbers[i], " ")
 	}
-	fmt.Print("\n")
+	fmt.Println()
+}
 
-	ch := make(chan int, 2)
-
+func GeneratorCh(numbers []int) chan int {
+	ch := make(chan int)
 	go func() {
-		for _, number := range numbers {
-			ch <- number
+		for i := range numbers {
+			ch <- numbers[i]
 		}
 		close(ch)
 	}()
+	return ch
+}
 
+func Workers(ctx context.Context, cansel context.CancelFunc, ch chan int, numWorkers int) {
 	var wg sync.WaitGroup
-	for i := 0; i < 6; i++ {
-		nameGorutine := fmt.Sprint("Горутина ", i+1)
+	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for {
-				select {
-				case <-ctx.Done():
-					fmt.Print(nameGorutine, " завершила работу\n")
-					return
-				case value, endReading := <-ch:
-					if !endReading {
-						return
-					}
-					if value > 50 {
-						fmt.Print(nameGorutine, " завершила работу число привысило 50\n")
-						cancel()
-						return
-					}
-					select {
-					case <-ctx.Done():
-						fmt.Print(nameGorutine, " завершила работу\n")
-						return
-					default:
-						fmt.Print(nameGorutine, " начала обработку числа ", value, "\n")
-						time.Sleep(2 * time.Second)
-						fmt.Print(nameGorutine, " завершила обработку числа ", value, "\n")
-					}
-				}
-			}
-		}()
+		go Worker(&wg, ctx, cansel, ch, i)
 	}
 	wg.Wait()
+}
+
+func Worker(wg *sync.WaitGroup, ctx context.Context, cansel context.CancelFunc, ch chan int, id int) {
+	defer wg.Done()
+	fmt.Print("Горутина ", id, " начала работу")
+	for {
+		select {
+		case number, ok := <-ch:
+			if !ok {
+				fmt.Print("Горутина ", id, " завершила работу")
+				return
+			}
+			if number > 50 {
+				fmt.Print("Горутина ", id, "принудительно завершила работку, ошибка")
+				cansel()
+				return
+			}
+			Process(id, number)
+		case <-ctx.Done():
+			fmt.Print("Горутина ", id, "принудительно завершила работку, ошибка")
+			return
+		}
+	}
+}
+
+func Process(id int, number int) {
+	fmt.Print("Горутина ", id, ": начала обрабатку числа ", number, "\n")
+	time.Sleep(3 * time.Second)
+	fmt.Print("Горутина ", id, ": завершила обработку числа ", number, "\n")
+}
+
+func main() {
+	numWorkers := 3
+	ctx, cansel := context.WithCancel(context.Background())
+	defer cansel()
+	ch := GeneratorCh(SliceGenerator())
+	Workers(ctx, cansel, ch, numWorkers)
 }

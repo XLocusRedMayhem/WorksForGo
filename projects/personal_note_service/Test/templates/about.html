@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <a href="/">Главная</a>
+        <a href="/about">О нас</a>
+    </nav>
+    <main>
+        <h1>{{.Title}}</h1>
+        <p>{{.Message}}</p>
+    </main>
+    <footer>&copy; {{.Year}} Мой сайт на Go</footer>
+</body>
+</html>
